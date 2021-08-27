@@ -7,7 +7,7 @@ export async function userList(options) {
   });
 }
 export async function addUser(params,options) {
-  return request('/api/1.0/user', {
+  return request('/api/1.0/users', {
     method: 'POST',
     data: params,
     ...(options || {}),

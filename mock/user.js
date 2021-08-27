@@ -33,7 +33,7 @@ export default {
           isLogin: false,
         },
         errorCode: '401',
-        errorMessage: 'Session Düştü',
+        errorMessage: 'Login Gerekli',
         success: true,
       });
       return;

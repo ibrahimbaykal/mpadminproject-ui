@@ -2,22 +2,36 @@ import React, {useRef, useState} from 'react';
 import {useIntl, FormattedMessage} from 'umi';
 import {PageContainer} from "@ant-design/pro-layout";
 import ProTable from "@ant-design/pro-table";
-import {Button, message,Form,Input} from "antd";
+import {Button, message, Form, Input, Drawer} from "antd";
 import {PlusOutlined} from "@ant-design/icons";
-import {userList,addUser} from "@/services/mogan/api";
+import {userList, addUser} from "@/services/mogan/api";
 import {ModalForm} from "@ant-design/pro-form";
+import ProDescriptions from "@ant-design/pro-descriptions";
 
 const UserList = () => {
 
   const actionRef = useRef();
   const [createModalVisible, handleModalVisible] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [currentRow, setCurrentRow] = useState();
+  const [authList, setAuthList] = useState();
   const intl = useIntl();
+
+  function setAuthListFunc(entity) {
+    const listItems = entity.authorities.map((authority) =>
+      <li label="Authority" valueType="text" key={authority.id}>
+        {authority.name}
+      </li>
+    );
+    setAuthList(listItems);
+  }
+
   const handleAdd = async (fields) => {
     console.log(fields);
     const hide = message.loading('正在添加');
 
     try {
-      await addUser({ ...fields });
+      await addUser({...fields});
       hide();
       message.success('Added successfully');
       return true;
@@ -27,8 +41,6 @@ const UserList = () => {
       return false;
     }
   };
-
-
   const columns = [
     {
       title: (
@@ -38,11 +50,13 @@ const UserList = () => {
         />
       ),
       dataIndex: 'username',
-      render: (dom) => {
+      render: (dom, entity) => {
         return (
           <a
             onClick={() => {
-              console.log("test")
+              setCurrentRow(entity);
+              setAuthListFunc(entity);
+              setShowDetail(true);
             }}
           >
             {dom}
@@ -112,7 +126,6 @@ const UserList = () => {
       },
     }
   ];
-
   return (
     <PageContainer>
       <ProTable
@@ -164,7 +177,7 @@ const UserList = () => {
           }
         }}
       >
-         <Form.Item
+        <Form.Item
           name="username"
           label="Kullanıcı Adı"
           rules={[
@@ -173,7 +186,7 @@ const UserList = () => {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
         <Form.Item
           name="password"
@@ -184,9 +197,50 @@ const UserList = () => {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
       </ModalForm>
+      <Drawer
+        width={600}
+        visible={showDetail}
+        onClose={() => {
+          setCurrentRow(undefined);
+          setShowDetail(false);
+        }}
+        closable={false}
+      >
+        {console.log(currentRow)}
+        {currentRow?.username && (
+          <ProDescriptions
+            column={2}
+            title={currentRow?.firstName + " " +currentRow?.lastName}
+            request={async () => ({
+              data: currentRow || {},
+            })}
+            params={{
+              id: currentRow?.name,
+            }}
+            columns={columns}
+          />
+        )}
+        {currentRow?.authorities.length > 0 && (
+          <ProDescriptions
+
+            column={2}
+            title="Kullanıcı Rolleri"
+            request={async () => ({
+              data: currentRow || {},
+            })}
+            // columns={detailColumns}
+          >
+            <ProDescriptions.Item valueType="text">
+              <ul>
+                {authList}
+              </ul>
+            </ProDescriptions.Item>
+          </ProDescriptions>
+        )}
+      </Drawer>
     </PageContainer>
   );
 };
